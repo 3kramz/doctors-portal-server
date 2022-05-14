@@ -21,24 +21,32 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@service
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
-async function run(){
-    try{
-        await client.connect();
-        const serviceCollection = client.db('docors_portal').collection('services');
+async function run() {
+  try {
+    await client.connect();
+    const serviceCollection = client.db('docors_portal').collection('services');
+    const bookingCollection = client.db('docors_portal').collection('booking');
 
-        app.get('/service', async(req, res) =>{
-            const query = {};
-            const cursor = serviceCollection.find(query);
-            const services = await cursor.toArray();
-           
-            res.send(services);
-        })
+    app.get('/service', async (req, res) => {
+      const query = {};
+      const cursor = serviceCollection.find(query);
+      const services = await cursor.toArray();
+
+      res.send(services);
+    })
+
+    app.post('/booking', async (req, res) => {
+      const booking = req.body
+    
+      const result = await bookingCollection.insertOne(booking)
+      res.send(result);
+    })
 
 
-    }
-    finally{
+  }
+  finally {
 
-    }
+  }
 }
 
 run().catch(console.dir);
