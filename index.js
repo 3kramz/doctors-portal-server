@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
     const serviceCollection = client.db('docors_portal').collection('services');
     const bookingCollection = client.db('docors_portal').collection('booking');
+    const userCollection = client.db('docors_portal').collection('users');
 
     app.get('/service', async (req, res) => {
       const query = {};
@@ -34,33 +35,6 @@ async function run() {
 
       res.send(services);
     })
-
-    app.get('/booking', async (req, res) => {
-      const email=req.query.email
-      const query = { email}
-      const bookings = await bookingCollection.find(query).toArray()
-      res.send(bookings)
-    })
-
-
-
-
-    app.post('/booking', async (req, res) => {
-      const booking = req.body
-      const query = { date: booking.date, treatmentName: booking.treatmentName, patientname: booking.patientname }
-
-      const exist = await bookingCollection.findOne(query)
-      if (exist) {
-        return res.send({ success: false, booking: exist })
-      }
-
-      const result = await bookingCollection.insertOne(booking)
-      res.send({ success: true, result });
-    })
-
-
-
-
 
 
     app.get("/available", async (req, res) => {
@@ -75,10 +49,47 @@ async function run() {
 
         service.slots = service.slots.filter(slot => !bookedSlot.includes(slot))
       })
-
-
-
       res.send(services)
+    })
+
+
+    app.get('/booking', async (req, res) => {
+      const email = req.query.email
+      const query = { email }
+      const bookings = await bookingCollection.find(query).toArray()
+      res.send(bookings)
+    })
+
+    app.post('/booking', async (req, res) => {
+      const booking = req.body
+      const query = { date: booking.date, treatmentName: booking.treatmentName, patientname: booking.patientname }
+
+      const exist = await bookingCollection.findOne(query)
+      if (exist) {
+        return res.send({ success: false, booking: exist })
+      }
+
+      const result = await bookingCollection.insertOne(booking)
+      res.send({ success: true, result });
+    })
+
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email
+      const user = req.body
+
+      const filter = { email };
+
+      const options = { upsert: true };
+     
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+
+      res.send(result)
+
+
+
     })
 
 
