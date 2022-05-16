@@ -35,17 +35,27 @@ async function run() {
       res.send(services);
     })
 
+    app.get('/booking', async (req, res) => {
+      const email=req.query.email
+      const query = { email}
+      const bookings = await bookingCollection.find(query).toArray()
+      res.send(bookings)
+    })
+
+
+
+
     app.post('/booking', async (req, res) => {
       const booking = req.body
-      const query = { date: booking.date, treatmentName: booking.treatmentName , patientname:booking.patientname}
+      const query = { date: booking.date, treatmentName: booking.treatmentName, patientname: booking.patientname }
 
-      const exist =await bookingCollection.findOne(query)
-      if(exist){
-        return res.send({success:false, booking:exist})
+      const exist = await bookingCollection.findOne(query)
+      if (exist) {
+        return res.send({ success: false, booking: exist })
       }
 
       const result = await bookingCollection.insertOne(booking)
-      res.send({success:true, result});
+      res.send({ success: true, result });
     })
 
 
@@ -53,20 +63,20 @@ async function run() {
 
 
 
-    app.get("/available", async (req, res)=>{
-    const date = req.query.date
+    app.get("/available", async (req, res) => {
+      const date = req.query.date
       const services = await serviceCollection.find().toArray()
-      const query = {date}
+      const query = { date }
       const bookings = await bookingCollection.find(query).toArray()
 
-      services.forEach(service=>{
-        const bookedServices = bookings.filter(book => book.treatmentName===service.name)
-        const bookedSlot = bookedServices.map(s=>s.slot)
+      services.forEach(service => {
+        const bookedServices = bookings.filter(book => book.treatmentName === service.name)
+        const bookedSlot = bookedServices.map(s => s.slot)
 
-        service.slots = service.slots.filter(slot=>!bookedSlot.includes(slot))
-   })
+        service.slots = service.slots.filter(slot => !bookedSlot.includes(slot))
+      })
 
- 
+
 
       res.send(services)
     })
