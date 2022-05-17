@@ -108,10 +108,15 @@ async function run() {
       const token = jwt.sign({ email}, process.env.SECRET_ACCESS_TOKEN);
 
       res.send({ result, token })
-
-
-
     })
+
+app.get("/users",verifyJWT, async(req,res)=>{
+  const users = await userCollection.find().toArray()
+  res.send(users)
+})
+
+
+
 
 
   }
