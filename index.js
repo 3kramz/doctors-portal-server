@@ -20,6 +20,22 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@service
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: 'UnAuthorized access' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: 'Forbidden access' })
+    }
+    req.decode = decoded;
+    next();
+  });
+}
+
 
 async function run() {
   try {
@@ -53,11 +69,18 @@ async function run() {
     })
 
 
-    app.get('/booking', async (req, res) => {
+    app.get('/booking', verifyJWT, async (req, res) => {
       const email = req.query.email
-      const query = { email }
-      const bookings = await bookingCollection.find(query).toArray()
-      res.send(bookings)
+      const decodedEmail = req.decode.email;
+      if (email == decodedEmail) {
+        const query = { email };
+        const bookings = await bookingCollection.find(query).toArray();
+        return res.send(bookings);
+      }
+      else {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+
     })
 
     app.post('/booking', async (req, res) => {
@@ -82,9 +105,9 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign({ foo: 'bar' }, process.env.SECRET_ACCESS_TOKEN);
+      const token = jwt.sign({ email}, process.env.SECRET_ACCESS_TOKEN);
 
-      res.send({result,token})
+      res.send({ result, token })
 
 
 
