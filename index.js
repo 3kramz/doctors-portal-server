@@ -96,6 +96,19 @@ async function run() {
       res.send({ success: true, result });
     })
 
+
+    app.get("/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email
+      const adminEmail = req.decode.email
+     
+      const admin = await userCollection.find({ email: adminEmail }).toArray()
+      
+      const isAdmin = admin[0].role === 'Admin'
+      console.log()
+      res.send(  {admin : isAdmin} )
+    })
+
+
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email
       const user = req.body
@@ -105,25 +118,34 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign({ email}, process.env.SECRET_ACCESS_TOKEN);
+      const token = jwt.sign({ email }, process.env.SECRET_ACCESS_TOKEN);
 
       res.send({ result, token })
     })
 
-    app.put("/user/admin/:email",verifyJWT, async (req, res) => {
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email
-      const filter = { email };
-      const updateDoc = {
-        $set:{role:"Admin" },
-      };
-      const result = await userCollection.updateOne(filter, updateDoc);
-       res.send(result)
+      const adminEmail = req.decode.email
+      const admin = await userCollection.find({ email: adminEmail }).toArray()
+      if (admin[0].role === "Admin") {
+        const filter = { email };
+        const updateDoc = {
+          $set: { role: "Admin" },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result)
+
+      }
+      else {
+        return res.status(403).send({ message: 'forbidden' });
+      }
+
     })
 
-app.get("/users",verifyJWT, async(req,res)=>{
-  const users = await userCollection.find().toArray()
-  res.send(users)
-})
+    app.get("/users", verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray()
+      res.send(users)
+    })
 
 
 
