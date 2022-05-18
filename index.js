@@ -158,6 +158,18 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/doctor',verifyJWT,verifyAdmin, async (req, res) => {
+     const result = await doctorCollection.find().toArray()
+      res.send(result);
+    })
+
+    app.delete('/doctor/:email',verifyJWT,verifyAdmin, async (req, res) => {
+      const email =req.params.email
+      const query = { email };
+      const result = await doctorCollection.deleteOne(query);
+      res.send(result);
+    })
+
 
 
   }
