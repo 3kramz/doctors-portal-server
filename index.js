@@ -43,6 +43,7 @@ async function run() {
     const serviceCollection = client.db('docors_portal').collection('services');
     const bookingCollection = client.db('docors_portal').collection('booking');
     const userCollection = client.db('docors_portal').collection('users');
+    const doctorCollection = client.db('docors_portal').collection('doctors');
 
     app.get('/service', async (req, res) => {
       const query = {};
@@ -148,6 +149,12 @@ async function run() {
     })
 
 
+    app.post('/admin', async (req, res) => {
+      const doctor = req.body
+      
+      const result = await bookingCollection.insertOne(doctor)
+      res.send(result);
+    })
 
 
 
